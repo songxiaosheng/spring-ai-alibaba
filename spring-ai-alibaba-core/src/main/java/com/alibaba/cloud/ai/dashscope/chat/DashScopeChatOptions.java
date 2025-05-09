@@ -28,6 +28,7 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.model.function.FunctionCallingOptions;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.util.Assert;
 
 /**
@@ -36,7 +37,7 @@ import org.springframework.util.Assert;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DashScopeChatOptions implements FunctionCallingOptions, ChatOptions {
 
-	// @formatter:off
+    // @formatter:off
   /** ID of the model to use. */
   @JsonProperty("model")
   private String model;
@@ -182,6 +183,12 @@ public class DashScopeChatOptions implements FunctionCallingOptions, ChatOptions
 
   @JsonIgnore
   private Map<String, Object> toolContext;
+
+  /**
+   * Collection of {@link ToolCallback}s to be used for tool calling in the chat completion requests.
+   */
+  @JsonIgnore
+  private List<FunctionCallback> toolCallbacks = new ArrayList<>();
 
   @Override
   public String getModel() {
@@ -353,6 +360,17 @@ public class DashScopeChatOptions implements FunctionCallingOptions, ChatOptions
     this.toolContext = toolContext;
   }
 
+  public List<FunctionCallback> getToolCallbacks() {
+    return this.toolCallbacks;
+  }
+
+  public void setToolCallbacks(List<FunctionCallback> toolCallbacks) {
+    Assert.notNull(toolCallbacks, "toolCallbacks cannot be null");
+    Assert.noNullElements(toolCallbacks, "toolCallbacks cannot contain null elements");
+    this.toolCallbacks = toolCallbacks;
+  }
+
+
   public Boolean getIncrementalOutput() {
     return incrementalOutput;
   }
@@ -435,6 +453,11 @@ public class DashScopeChatOptions implements FunctionCallingOptions, ChatOptions
 
     public DashscopeChatOptionsBuilder withTools(List<DashScopeApi.FunctionTool> tools) {
       this.options.tools = tools;
+      return this;
+    }
+
+    public DashscopeChatOptionsBuilder withToolCallbacks(List<FunctionCallback> toolCallbacks) {
+      this.options.toolCallbacks = toolCallbacks;
       return this;
     }
 
@@ -523,6 +546,7 @@ public class DashScopeChatOptions implements FunctionCallingOptions, ChatOptions
         .withFunctions(fromOptions.getFunctions())
         .withRepetitionPenalty(fromOptions.getRepetitionPenalty())
         .withTools(fromOptions.getTools())
+        .withToolCallbacks(fromOptions.getToolCallbacks())
         .withToolContext(fromOptions.getToolContext())
         .withMultiModel(fromOptions.getMultiModel())
         .withProxyToolCalls(fromOptions.getProxyToolCalls())
